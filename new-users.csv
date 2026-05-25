@@ -1,0 +1,9 @@
+Name,FirstName,LastName,Username,Password,Department,Group,Title,Email
+John Smith,John,Smith,jsmith,P@ssword123!,IT,IT-Admins,System Administrator,jsmith@lab.local
+Sarah Lee,Sarah,Lee,slee,P@ssword123!,IT,IT-Admins,IAM Analyst,slee@lab.local
+Mike Brown,Mike,Brown,mbrown,P@ssword123!,IT,Helpdesk,Helpdesk Technician,mbrown@lab.local
+Emily Davis,Emily,Davis,edavis,P@ssword123!,HR,HR-Staff,HR Manager,edavis@lab.local
+Lisa Turner,Lisa,Turner,lturner,P@ssword123!,HR,HR-Staff,Recruiter,lturner@lab.local
+Robert King,Robert,King,rking,P@ssword123!,Finance,Finance-ReadOnly,Financial Analyst,rking@lab.local
+Karen White,Karen,White,kwhite,P@ssword123!,Finance,Finance-ReadOnly,Accountant,kwhite@lab.local
+Steve Hall,Steve,Hall,shall,P@ssword123!,Finance,Finance-ReadOnly,Payroll Specialist,shall@lab.local
