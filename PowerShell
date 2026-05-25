@@ -1,0 +1,134 @@
+# Active Directory Home Lab
+
+A fully functional Windows Server 2022 Active Directory environment built from scratch as a hands-on IAM engineering project. This lab simulates a real enterprise identity infrastructure — including organizational unit design, role-based access control, Group Policy enforcement, and automated user provisioning.
+
+---
+
+## Lab Architecture
+
+| Component | Details |
+|---|---|
+| Hypervisor | VirtualBox (or VMware Workstation) |
+| Domain Controller | Windows Server 2022 — `DC01.lab.local` |
+| Client Machine | Windows 10/11 — `CLIENT01` |
+| Network | Internal-only (`192.168.10.0/24`) |
+| Domain | `lab.local` |
+
+```
+┌─────────────────────────────────────┐
+│           lab.local domain          │
+│                                     │
+│  ┌──────────────┐  ┌─────────────┐  │
+│  │    DC01      │  │  CLIENT01   │  │
+│  │ 192.168.10.1 │  │192.168.10.10│  │
+│  │  AD DS, DNS  │  │  Win 10/11  │  │
+│  └──────────────┘  └─────────────┘  │
+└─────────────────────────────────────┘
+```
+
+---
+
+## What I Built
+
+### Organizational Unit (OU) Structure
+Designed a department-based OU hierarchy mirroring a real org:
+
+```
+lab.local
+├── IT
+│   └── ServiceAccounts
+├── HR
+├── Finance
+└── Servers
+```
+
+### Users & Groups
+- Created 10+ domain user accounts distributed across OUs
+- Built security groups: `IT-Admins`, `HR-Staff`, `Finance-ReadOnly`
+- Assigned users to groups following least-privilege principles
+
+### Group Policy Objects (GPOs)
+| GPO | Scope | Settings Applied |
+|---|---|---|
+| Default Domain Policy | Domain-wide | Password complexity, min length 12, 90-day expiry, history 10 |
+| HR-Desktop-Policy | HR OU | CMD access disabled, desktop items hidden |
+
+### Automated User Provisioning (PowerShell)
+Wrote a PowerShell script to bulk-create users from a CSV file, placing each account in the correct OU with appropriate group membership — simulating a real joiner workflow.
+
+```powershell
+Import-Module ActiveDirectory
+
+# Import CSV
+$Users = Import-Csv ".\new-users.csv"
+
+foreach ($User in $Users) {
+
+    try {
+
+        # Build OU path dynamically
+        $OUPath = "OU=$($User.Department),DC=lab,DC=local"
+
+        # Convert password
+        $SecurePassword = ConvertTo-SecureString $User.Password -AsPlainText -Force
+
+        # Create AD User
+        New-ADUser `
+            -Name $User.Name `
+            -GivenName $User.FirstName `
+            -Surname $User.LastName `
+            -SamAccountName $User.Username `
+            -UserPrincipalName "$($User.Username)@lab.local" `
+            -Department $User.Department `
+            -Title $User.Title `
+            -EmailAddress $User.Email `
+            -Path $OUPath `
+            -AccountPassword $SecurePassword `
+            -Enabled $true `
+            -ChangePasswordAtLogon $true `
+            -PasswordNeverExpires $false
+
+        Write-Host "[SUCCESS] Created user: $($User.Username)" -ForegroundColor Green
+
+        # Add user to security group
+        Add-ADGroupMember `
+            -Identity $User.Group `
+            -Members $User.Username
+
+        Write-Host "[SUCCESS] Added $($User.Username) to group $($User.Group)" -ForegroundColor Cyan
+
+    }
+    catch {
+
+        Write-Host "[ERROR] Failed to create user: $($User.Username)" -ForegroundColor Red
+        Write-Host $_.Exception.Message
+
+    }
+}
+```
+
+---
+
+## Key Skills Demonstrated
+
+- Active Directory Domain Services (AD DS) deployment and configuration
+- OU design and delegation model planning
+- Role-Based Access Control (RBAC) with security groups
+- Group Policy design and enforcement
+- PowerShell automation for identity lifecycle management
+- DNS configuration for AD-integrated zones
+- Domain join and user authentication testing
+
+---
+
+## How to Replicate This Lab
+
+1. Download [Windows Server 2022 Evaluation](https://www.microsoft.com/en-us/evalcenter/evaluate-windows-server-2022) (free, 180-day trial)
+2. Create two VMs in VirtualBox — one for the DC, one for the client
+3. Set both VMs to use an **Internal Network** adapter (`LabNet`)
+4. Assign a static IP to the DC (`192.168.10.1`) and point DNS to itself
+5. Install the AD DS role and promote to Domain Controller
+6. Join the client VM to `lab.local` using the DC's IP as DNS
+
+Full step-by-step setup notes are in [`/docs/setup-guide.md`](./docs/setup-guide.md).
+
