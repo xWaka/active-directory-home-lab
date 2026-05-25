@@ -1,0 +1,9 @@
+C:\IAM-Lab\
+│
+├── Scripts\
+│   └── bulk-user-create.ps1
+│
+├── CSV\
+│   └── new-users.csv
+│
+└── Logs\
